@@ -20,16 +20,16 @@ COPY . .
 RUN pnpm run build
 
 # Final stage - combine production dependencies and build output
-FROM node:23.11.1-alpine AS runner
-WORKDIR /app
-COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
-COPY --from=build --chown=node:node /app/dist ./dist
+FROM dercilio/andromeda:0.1.0-draft43 AS runner
+WORKDIR /usr/src/myapp
+COPY --from=build /app/.env ./
+COPY --from=build /app/package.json ./
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
 
-# Use the node user from the image
-USER node
+ENV RUST_LOG=debug
 
-# Expose port 8080
 EXPOSE 8080
 
 # Start the server
-CMD ["node", "dist/index.js"]
+CMD ["andromeda", "run", "dist/index.js" ]
